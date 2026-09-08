@@ -1,0 +1,1 @@
+{"root":["./src/aml-provider.port.ts","./src/company-verification-provider.port.ts","./src/fx-provider.port.ts","./src/index.ts","./src/kyc-provider.port.ts","./src/payment-rail-provider.port.ts","./src/regulatory-provider.port.ts"],"version":"5.9.3"}

@@ -1,0 +1,26 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".e2e-spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": ["ts-jest", {
+      "tsconfig": "<rootDir>/../tsconfig.json",
+      "isolatedModules": true
+    }]
+  },
+  "moduleNameMapper": {
+    "^@ledgerbridge/domain/(.*)$": "<rootDir>/../../../packages/domain/src/$1",
+    "^@ledgerbridge/domain$": "<rootDir>/../../../packages/domain/src/index",
+    "^@ledgerbridge/ports/(.*)$": "<rootDir>/../../../packages/ports/src/$1",
+    "^@ledgerbridge/ports$": "<rootDir>/../../../packages/ports/src/index",
+    "^@ledgerbridge/adapters/(.*)$": "<rootDir>/../../../packages/adapters/src/$1",
+    "^@ledgerbridge/adapters$": "<rootDir>/../../../packages/adapters/src/index",
+    "^@ledgerbridge/infra-postgres/(.*)$": "<rootDir>/../../../packages/infra-postgres/src/$1",
+    "^@ledgerbridge/infra-postgres$": "<rootDir>/../../../packages/infra-postgres/src/index",
+    "^@ledgerbridge/orchestration/(.*)$": "<rootDir>/../../../packages/orchestration/src/$1",
+    "^@ledgerbridge/orchestration$": "<rootDir>/../../../packages/orchestration/src/index",
+    "^@ledgerbridge/shared/(.*)$": "<rootDir>/../../../packages/shared/src/$1",
+    "^@ledgerbridge/shared$": "<rootDir>/../../../packages/shared/src/index"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "strict": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@ledgerbridge/domain": ["packages/domain/src"],
+      "@ledgerbridge/domain/*": ["packages/domain/src/*"],
+      "@ledgerbridge/ports": ["packages/ports/src"],
+      "@ledgerbridge/ports/*": ["packages/ports/src/*"],
+      "@ledgerbridge/adapters": ["packages/adapters/src"],
+      "@ledgerbridge/adapters/*": ["packages/adapters/src/*"],
+      "@ledgerbridge/infra-postgres": ["packages/infra-postgres/src"],
+      "@ledgerbridge/infra-postgres/*": ["packages/infra-postgres/src/*"],
+      "@ledgerbridge/orchestration": ["packages/orchestration/src"],
+      "@ledgerbridge/orchestration/*": ["packages/orchestration/src/*"],
+      "@ledgerbridge/shared": ["packages/shared/src"],
+      "@ledgerbridge/shared/*": ["packages/shared/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "build", ".turbo"]
+}

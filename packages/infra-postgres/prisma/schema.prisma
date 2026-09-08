@@ -1,0 +1,226 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum AccountStatus {
+  ACTIVE
+  FROZEN
+  SUSPENDED
+  CLOSED
+}
+
+enum PostingDirection {
+  DEBIT
+  CREDIT
+}
+
+enum PaymentState {
+  quoted
+  validated
+  committed
+  submitted
+  settled
+  reversed
+  failed
+}
+
+enum ComplianceDecision {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  accounts       Account[]
+  ledgerAccounts LedgerAccount[]
+  ledgerEntries  LedgerEntry[]
+  payments       Payment[]
+  auditLogs      AuditLog[]
+
+  @@map("tenants")
+}
+
+model Account {
+  id          String        @id @default(uuid())
+  tenantId    String        @map("tenant_id")
+  name        String
+  currency    String
+  type        AccountType
+  status      AccountStatus @default(ACTIVE)
+  kycTier     Int           @default(1) @map("kyc_tier")
+  metadata    Json?
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  tenant      Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sentPayments Payment[]    @relation("SenderAccount")
+  receivedPayments Payment[] @relation("RecipientAccount")
+
+  @@map("accounts")
+}
+
+model LedgerAccount {
+  id        String        @id @default(uuid())
+  tenantId  String        @map("tenant_id")
+  name      String
+  type      AccountType
+  currency  String
+  status    AccountStatus @default(ACTIVE)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  tenant    Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  postings  Posting[]
+
+  @@map("ledger_accounts")
+}
+
+model LedgerEntry {
+  id              String    @id @default(uuid())
+  tenantId        String    @map("tenant_id")
+  transactionDate DateTime  @default(now()) @map("transaction_date")
+  description     String
+  correlationId   String?   @map("correlation_id")
+  status          String    @default("COMMITTED")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  postings        Posting[]
+  payments        Payment[]
+
+  @@map("ledger_entries")
+}
+
+model Posting {
+  id            String           @id @default(uuid())
+  ledgerEntryId String           @map("ledger_entry_id")
+  accountId     String           @map("account_id")
+  amountMinor   BigInt           @map("amount_minor")
+  currency      String
+  direction     PostingDirection
+  sequence      Int              @default(0)
+  createdAt     DateTime         @default(now()) @map("created_at")
+
+  ledgerEntry   LedgerEntry      @relation(fields: [ledgerEntryId], references: [id], onDelete: Cascade)
+  ledgerAccount LedgerAccount    @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@index([ledgerEntryId])
+  @@index([accountId])
+  @@map("postings")
+}
+
+model PaymentQuote {
+  id            String    @id @default(uuid())
+  tenantId      String    @map("tenant_id")
+  sourceAmount  BigInt    @map("source_amount_minor")
+  sourceCurrency String   @map("source_currency")
+  targetAmount  BigInt    @map("target_amount_minor")
+  targetCurrency String   @map("target_currency")
+  exchangeRate  Float     @map("exchange_rate")
+  feeAmountMinor BigInt   @map("fee_amount_minor")
+  expiresAt     DateTime  @map("expires_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  payments      Payment[]
+
+  @@map("payment_quotes")
+}
+
+model Payment {
+  id                   String        @id @default(uuid())
+  tenantId             String        @map("tenant_id")
+  sourceAccountId      String        @map("source_account_id")
+  destinationAccountId String        @map("destination_account_id")
+  sourceAmountMinor    BigInt        @map("source_amount_minor")
+  sourceCurrency       String        @map("source_currency")
+  targetAmountMinor    BigInt        @map("target_amount_minor")
+  targetCurrency       String        @map("target_currency")
+  feeAmountMinor       BigInt        @map("fee_amount_minor")
+  quoteId              String?       @map("quote_id")
+  reference            String
+  state                PaymentState  @default(quoted)
+  idempotencyKey       String?       @unique @map("idempotency_key")
+  rejectionReason      String?       @map("rejection_reason")
+  ledgerEntryId        String?       @map("ledger_entry_id")
+  settlementRailTxId   String?       @map("settlement_rail_tx_id")
+  createdAt            DateTime      @default(now()) @map("created_at")
+  updatedAt            DateTime      @updatedAt @map("updated_at")
+
+  tenant               Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sourceAccount        Account       @relation("SenderAccount", fields: [sourceAccountId], references: [id])
+  destinationAccount   Account       @relation("RecipientAccount", fields: [destinationAccountId], references: [id])
+  quote                PaymentQuote? @relation(fields: [quoteId], references: [id])
+  ledgerEntry          LedgerEntry?  @relation(fields: [ledgerEntryId], references: [id])
+  complianceCases      ComplianceCase[]
+
+  @@map("payments")
+}
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  tenantId      String   @map("tenant_id")
+  actor         String
+  action        String
+  entityType    String   @map("entity_type")
+  entityId      String   @map("entity_id")
+  beforeState   Json?    @map("before_state")
+  afterState    Json?    @map("after_state")
+  timestamp     DateTime @default(now())
+  correlationId String   @map("correlation_id")
+  previousHash  String   @map("previous_hash")
+  hash          String   @unique
+
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([entityId])
+  @@index([correlationId])
+  @@map("audit_logs")
+}
+
+model IdempotencyRecord {
+  key          String   @id
+  tenantId     String   @map("tenant_id")
+  requestHash  String   @map("request_hash")
+  responseBody Json?    @map("response_body")
+  statusCode   Int?     @map("status_code")
+  status       String   // PROCESSING, COMPLETED, FAILED
+  createdAt    DateTime @default(now()) @map("created_at")
+  expiresAt    DateTime @map("expires_at")
+
+  @@map("idempotency_records")
+}
+
+model ComplianceCase {
+  id              String             @id @default(uuid())
+  tenantId        String             @map("tenant_id")
+  paymentId       String             @map("payment_id")
+  decision        ComplianceDecision @default(PENDING)
+  reason          String
+  rulesTriggered  Json               @map("rules_triggered")
+  officerId       String?            @map("officer_id")
+  decidedAt       DateTime?          @map("decided_at")
+  createdAt       DateTime           @default(now()) @map("created_at")
+
+  payment         Payment            @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@map("compliance_cases")
+}

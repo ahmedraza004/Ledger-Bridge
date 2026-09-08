@@ -1,0 +1,35 @@
+{
+  "name": "ledgerbridge-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "dev:api": "npm --workspace=@ledgerbridge/api run dev",
+    "dev:web": "npm --workspace=@ledgerbridge/web run dev",
+    "test": "jest --runInBand",
+    "test:coverage": "jest --runInBand --coverage",
+    "test:e2e": "jest --config apps/api/test/jest-e2e.json",
+    "typecheck": "tsc --noEmit",
+    "seed": "node scripts/seed.js",
+    "clean": "turbo run clean && rimraf node_modules"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.13.0",
+    "@typescript-eslint/eslint-plugin": "^8.22.0",
+    "@typescript-eslint/parser": "^8.22.0",
+    "eslint": "^9.19.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.4.2",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "turbo": "^2.4.0",
+    "typescript": "^5.7.3"
+  }
+}
